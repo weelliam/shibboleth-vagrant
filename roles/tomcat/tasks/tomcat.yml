@@ -23,7 +23,8 @@
           force=yes
 
   - name: Extract JCE
-    command: 'unzip -oj {{ download_dir }}/jce_policy-8.zip -d {{ java_installdir }}/jdk{{ java_version }}/jre/lib/security/'
+    unarchive: src={{ download_dir }}/jce_policy-8.zip dest={{ java_installdir }}/jdk{{ java_version }}/jre/lib/security/ copy=no
+    #command: 'unzip -oj {{ download_dir }}/jce_policy-8.zip -d {{ java_installdir }}/jdk{{ java_version }}/jre/lib/security/'
 
   - name: Copy Tomcats server.xml
     template: src=server.xml.j2

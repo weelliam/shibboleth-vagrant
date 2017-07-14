@@ -1,11 +1,40 @@
 ---
+    - name: Install epel-release (needed for phpldapadmin)
+      yum: pkg=epel-release state=installed
+
     - name: Install openldap
       yum: pkg={{item}} state=installed
       with_items:
       - openldap
+      - compat-openldap
       - openldap-clients
       - openldap-servers
+      - openldap-servers-sql
+      - openldap-devel
       - phpldapadmin
+      - migrationtools
+
+    - name: Generate LDAP pqssword from secret key (here motdepasse)
+      shell: slappasswd -s motdepasse -n > /etc/openldap/passwd
+      become: true
+    
+    - name: Generate a X509 certificate valid for 365 days
+      command: openssl req -new -x509 -nodes -out /etc/openldap/certs/cert.pem -keyout /etc/openldap/certs/priv.pem -days 365 -subj "/C=US/ST=Oregon/L=Portland/O=IT/CN=${ansible_fqdn}"  -extensions v3_ca creates=/etc/openldap/certs/cert.pem
+      become: true
+
+    - name: Secure the content of the /etc/openldap/certs directory
+      file: path=/etc/openldap/certs owner=ldap group=ldap
+      file: path=/etc/openldap/certs/priv.pem mode=600
+
+    - name: Prepare the LDAP database
+      command: cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+
+    - name: Generate database files (don’t worry about error messages!)
+      command: slaptest
+      ignore_errors: yes
+
+    - name: Change LDAP database ownership
+      file: path=/var/lib/ldap owner=ldap group=ldap recurse=yes
 
     - name: Enable service slapd
       service: name=slapd enabled=yes state=started
@@ -19,8 +48,12 @@
     - name: Configure OpenLDAP + add base ldifs
       command: "{{ item }}"
       with_items:
+      - ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f /etc/openldap/schema/cosine.ldif
+      - ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f /etc/openldap/schema/nis.ldif
+#      - ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f /etc/openldap/schema/core.ldif
+      - ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f /etc/openldap/schema/inetorgperson.ldif
       - ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f {{ download_dir }}/config.ldif
-      - ldapadd -x -w Password1 -D cn=manager,dc=vagrant,dc=local -H ldapi:/// -f {{ download_dir }}/base.ldif
+      - ldapadd -x -w Password1 -D cn=Manager,dc=vagrant,dc=local -H ldapi:/// -f {{ download_dir }}/base.ldif
       notify: restart openldap
 
     - name: Copy phpLdapAdmin config

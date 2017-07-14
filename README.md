@@ -7,7 +7,7 @@ Shibboleth SP / IdP are almost on factory settings. ~~So IdP wont release any at
 * Virtualbox (or other vagrant compliant virtualization "engine")
 
 ## This Vagrant box includes following packages / applications:
-* CentOS 6.4
+* CentOS 7
 * httpd 2.2
 * Oracle Java 8
 * Tomcat 8.0.30

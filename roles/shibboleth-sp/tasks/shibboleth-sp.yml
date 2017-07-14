@@ -6,10 +6,13 @@
         owner=root group=root mode=0644
 
     - name: Add shibboleth repo key
-      rpm_key: state=present key=http://download.opensuse.org/repositories/security:/shibboleth/CentOS_CentOS-6/repodata/repomd.xml.key
+      rpm_key: state=present key=http://download.opensuse.org/repositories/security:/shibboleth/CentOS_7/repodata/repomd.xml.key
 
     - name: Install Shibboleth-sp
-      yum: pkg=shibboleth.x86_64 state=installed
+      # yum: pkg=shibboleth.x86_64 state=installed
+      yum: 
+        name: http://mirror.library.ucy.ac.cy/linux/opensuse/repositories/security:/shibboleth/CentOS_7/x86_64/shibboleth-2.6.0-2.1.x86_64.rpm
+        state: installed
 
     - name: Copy Shibboleth-SP configuration files
       copy: src={{ item }} dest="/etc/shibboleth"

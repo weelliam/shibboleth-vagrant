@@ -1,11 +1,13 @@
 ---
-    - name: Install apache, mod_ssl, wget, vim
+    - name: Install apache, mod_ssl, wget, vim, unzip and git
       yum: pkg={{ item }} state=present
       with_items:
       - vim-enhanced
       - httpd
       - mod_ssl
       - wget
+      - unzip
+      - git
 
     - name: Create download directory
       file: path={{ download_dir }} state=directory
@@ -14,10 +16,22 @@
       file: path=/var/www/html/secure state=directory
 
     - name: Download java
-      command: 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz -O {{ download_dir }}/jdk-8u45-linux-x64.tar.gz'
+      get_url:
+        url: 'http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz'
+        dest: '{{ download_dir }}/jdk-8u45-linux-x64.tar.gz'
+        headers: "Cookie: oraclelicense=accept-securebackup-cookie"
+        validate_certs: no
+        mode: 0775
+      #command: 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz -O {{ download_dir }}/jdk-8u45-linux-x64.tar.gz'
 
     - name: Download JCE
-      command: 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -O {{ download_dir }}/jce_policy-8.zip'
+      get_url:
+        url: 'http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip'
+        dest: '{{ download_dir }}/jce_policy-8.zip'
+        headers: "Cookie: oraclelicense=accept-securebackup-cookie"
+        validate_certs: no
+        mode: 0775
+      #command: 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -O {{ download_dir }}/jce_policy-8.zip'
 
     - name: Create profile.d files
       template: src=profile.d/{{ item.src }} dest=/etc/profile.d/{{ item.dest }}
